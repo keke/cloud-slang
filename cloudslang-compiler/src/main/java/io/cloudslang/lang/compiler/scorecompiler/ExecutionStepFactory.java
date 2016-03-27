@@ -24,6 +24,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.Validate;
 import io.cloudslang.score.api.ControlActionMetadata;
 import io.cloudslang.score.api.ExecutionStep;
+import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
@@ -93,14 +94,19 @@ public class ExecutionStepFactory {
 
         @SuppressWarnings("unchecked") Map<String, String> javaActionData = (Map<String, String>) actionRawData.get(SlangTextualKeys.JAVA_ACTION);
         @SuppressWarnings("unchecked") String pythonScript = (String) actionRawData.get(ScoreLangConstants.PYTHON_SCRIPT_KEY);
+        @SuppressWarnings("unchecked") String jsScript = (String) actionRawData.get(ScoreLangConstants.JAVASCRIPT_SCRIPT_KEY);
         boolean javaActionFound = MapUtils.isNotEmpty(javaActionData);
         boolean pythonScriptFound = StringUtils.isNotEmpty(pythonScript);
+        boolean jsScriptFound = StringUtils.isNotEmpty(jsScript);
 
         if (javaActionFound) {
             actionType = ActionType.JAVA;
             actionData.putAll(javaActionData);
         } else  if (pythonScriptFound) {
             actionType = ActionType.PYTHON;
+            actionData.putAll(actionRawData);
+        } else if(jsScriptFound){
+          actionType = ActionType.JAVA_SCRIPT;
             actionData.putAll(actionRawData);
         } else {
             // java action or python script data is missing

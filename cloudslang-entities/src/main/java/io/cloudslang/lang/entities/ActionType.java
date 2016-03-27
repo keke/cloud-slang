@@ -18,5 +18,6 @@ package io.cloudslang.lang.entities;
 public enum ActionType {
 
     JAVA,
-    PYTHON
+    PYTHON,
+    JAVA_SCRIPT
 }

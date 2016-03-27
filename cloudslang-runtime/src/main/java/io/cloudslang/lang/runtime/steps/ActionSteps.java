@@ -29,6 +29,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.script.*;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -59,7 +60,8 @@ public class ActionSteps extends AbstractSteps {
                          @Param(ScoreLangConstants.ACTION_METHOD_KEY) String methodName,
                          @Param(EXECUTION_RUNTIME_SERVICES) ExecutionRuntimeServices executionRuntimeServices,
                          @Param(ScoreLangConstants.PYTHON_SCRIPT_KEY) String python_script,
-                         @Param(ScoreLangConstants.NEXT_STEP_ID_KEY) Long nextStepId) {
+                         @Param(ScoreLangConstants.NEXT_STEP_ID_KEY) Long nextStepId,
+                         @Param(ScoreLangConstants.JAVASCRIPT_SCRIPT_KEY) String javascript_script) {
 
         Map<String, Serializable> returnValue = new HashMap<>();
         Map<String, Serializable> callArguments = runEnv.removeCallArguments();
@@ -80,6 +82,9 @@ public class ActionSteps extends AbstractSteps {
                     break;
                 case PYTHON:
                     returnValue = prepareAndRunPythonAction(callArguments, python_script);
+                    break;
+                case JAVA_SCRIPT:
+                    returnValue = prepareAndRunJavaScriptAction(callArguments, javascript_script);
                     break;
                 default:
                     break;
@@ -102,6 +107,7 @@ public class ActionSteps extends AbstractSteps {
 
         runEnv.putNextStepPosition(nextStepId);
     }
+
 
     private Map<String, Serializable> runJavaAction(Map<String, SerializableSessionObject> serializableSessionData,
                                                     Map<String, Serializable> currentContext,
@@ -245,4 +251,30 @@ public class ActionSteps extends AbstractSteps {
         throw new RuntimeException("Python script not found in action data");
     }
 
+    private Map<String, Serializable> prepareAndRunJavaScriptAction(
+            Map<String, Serializable> callArguments,
+            String javascripScript) {
+        // a simple implementation to add JS script
+        // TODO: to support commonjs module
+        if (StringUtils.isNotBlank(javascripScript)) {
+            ScriptEngineManager sem = new ScriptEngineManager();
+            ScriptEngine jsEngine = sem.getEngineByName("js");
+            for (Map.Entry<String, ?> arg : callArguments.entrySet()) {
+                jsEngine.put(arg.getKey(), arg.getValue());
+            }
+            Map<String, Serializable> returnValue = new HashMap<>();
+            try {
+                jsEngine.eval(javascripScript);
+                ScriptContext context = jsEngine.getContext();
+                Bindings bindings = context.getBindings(ScriptContext.ENGINE_SCOPE);
+                for (Map.Entry<String, Object> each : bindings.entrySet()) {
+                    returnValue.put(each.getKey(), each.getValue().toString());
+                }
+                return returnValue;
+            } catch (ScriptException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        throw new RuntimeException("JavaScript script not found in action data");
+    }
 }

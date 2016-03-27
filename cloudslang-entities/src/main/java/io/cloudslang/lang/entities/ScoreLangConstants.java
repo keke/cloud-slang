@@ -34,6 +34,8 @@ public interface ScoreLangConstants {
     String ACTION_METHOD_KEY = "methodName";
     String PYTHON_SCRIPT_KEY = "python_script";
 
+    String JAVASCRIPT_SCRIPT_KEY = "javascript_script";
+
     String OPERATION_NAME_KEY = "operationName";
 
     //navigation

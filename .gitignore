@@ -10,3 +10,4 @@ build/cli/
 .project
 .classpath
 *.history
+/cloudslang-all/cs
